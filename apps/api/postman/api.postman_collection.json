@@ -1,0 +1,22 @@
+{
+  "info": {
+    "name": "API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000"
+    }
+  ],
+  "item": [
+    {
+      "name": "GET /ping",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/ping"
+      }
+    }
+  ]
+}
