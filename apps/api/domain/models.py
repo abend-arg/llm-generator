@@ -18,6 +18,7 @@ class FileSection:
 class SourceType(str, Enum):
     LLMS_TXT = "llms_txt"
     HTML = "html"
+    DEFAULT = "default"
 
 
 @dataclass(frozen=True, slots=True)
