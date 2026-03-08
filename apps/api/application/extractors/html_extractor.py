@@ -30,6 +30,9 @@ class HtmlExtractor:
             if h1 and h1.get_text(strip=True):
                 extracted_title = h1.get_text(strip=True)
 
+        if extracted_summary is None:
+            extracted_summary = self._extract_summary(soup)
+
         updates: dict[str, object] = {}
 
         if not data.title and extracted_title:
