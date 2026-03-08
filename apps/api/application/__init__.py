@@ -1,7 +1,6 @@
 from .export_content_service import ExportContentService
 from .extractors import (
     ExtractorProtocol,
-    ExtractorSelector,
     HtmlExtractor,
     LlmsTxtExtractor,
 )
@@ -14,7 +13,6 @@ __all__ = [
     "ExtractorProtocol",
     "HtmlExtractor",
     "LlmsTxtExtractor",
-    "ExtractorSelector",
     "LlmsTxtRenderer",
     "RendererProtocol",
 ]
