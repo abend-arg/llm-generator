@@ -12,9 +12,9 @@ class LlmsTxtRenderer:
             lines.append("")
             lines.append(f"> {data.summary}")
 
-        for note in data.notes:
+        if data.info:
             lines.append("")
-            lines.append(note)
+            lines.append(data.info)
 
         for section in data.sections:
             lines.append("")

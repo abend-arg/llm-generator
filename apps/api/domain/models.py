@@ -26,5 +26,5 @@ class ExtractedContent:
     source_type: SourceType
     title: str
     summary: str | None = None
-    notes: list[str] = field(default_factory=list)
+    info: str | None = None
     sections: list[FileSection] = field(default_factory=list)

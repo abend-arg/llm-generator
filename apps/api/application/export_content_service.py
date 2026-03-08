@@ -21,7 +21,7 @@ class ExportContentService:
             source_type=SourceType.HTML,
             title=url,
             summary=None,
-            notes=[],
+            info=None,
             sections=[],
         )
         for extractor in self._extractors:
