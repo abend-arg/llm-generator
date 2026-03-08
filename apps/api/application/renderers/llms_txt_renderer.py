@@ -1,7 +1,7 @@
-class LlmsTxtRenderer:
-    def __init__(self) -> None:
-        pass
+from domain import ExtractedContent
 
-    def render(self, url: str) -> tuple[str, str]:
-        _ = url
+
+class LlmsTxtRenderer:
+    def render(self, data: ExtractedContent) -> tuple[str, str]:
+        _ = data
         return "llms.txt", ""
