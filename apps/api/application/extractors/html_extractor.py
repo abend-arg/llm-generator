@@ -89,41 +89,41 @@ class HtmlExtractor:
             return None
         return response
 
-    def _extract_summary(self, soup: BeautifulSoup) -> str | None:
+    def _extract_summary_and_info(
+        self, soup: BeautifulSoup
+    ) -> tuple[str | None, str | None]:
         candidates: list[str] = []
-        reject_keywords = {
-            "testimonial",
-            "testimonials",
-            "review",
-            "reviews",
-            "quote",
-            "quotes",
-            "social-proof",
-            "case-study",
-            "customer",
-        }
-
         containers = soup.find_all(["main", "article", "section", "div"])
         for tag in containers:
-            if self._is_rejected(tag, reject_keywords) or not self._has_hs(tag):
+            if self._is_rejected_tree(tag) or not self._has_hs(tag):
                 continue
             nodes = tag.find_all(["p", "ul", "span", "div"], recursive=False)
             if not nodes:
                 continue
-            text = "\n".join(n.get_text("\n", strip=True) for n in nodes).strip()
+            text = "\n".join(
+                n.get_text("\n", strip=True)
+                for n in nodes
+                if not self._is_rejected_tree(n)
+            ).strip()
             if text:
                 candidates.append(text)
 
         if not candidates:
             for n in soup.find_all(["p", "li", "span", "div"]):
+                if self._is_rejected_tree(n):
+                    continue
                 text = n.get_text(" ", strip=True)
                 if text:
                     candidates.append(text)
 
         if not candidates:
-            return None
+            return None, None
 
         best_text = max(candidates, key=len)
         if len(best_text) < 100:
-            return None
-        return best_text[:600]
+            return None, None
+
+        summary = best_text
+        info_candidates = [c for c in candidates if c != best_text and len(c) >= 80]
+        info = "\n\n".join(info_candidates) if info_candidates else None
+        return summary, info
