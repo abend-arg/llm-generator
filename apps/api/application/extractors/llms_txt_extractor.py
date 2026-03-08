@@ -57,10 +57,10 @@ class LlmsTxtExtractor:
                 continue
 
             match True:
-                case _ if line.startswith("# "):  # title
+                case _ if line.startswith("# "):    # title
                     if title is None:
                         title = line[2:].strip()
-                case _ if line.startswith("## "):  # section header
+                case _ if line.startswith("## "):   # section header
                     if current_section_title and current_section_items:
                         sections.append(
                             FileSection(
@@ -71,12 +71,12 @@ class LlmsTxtExtractor:
                         current_section_items = []
                     section_info_started = False
                     current_section_title = line[3:].strip()
-                case _ if line.startswith(">"):
-                    if summary is None:  # summary / quote
+                case _ if line.startswith(">"):     # summary / quote
+                    if summary is None:  
                         summary = line.lstrip("> ").strip()
                     else:
                         info_buffer.append(line.lstrip("> ").strip())
-                case _ if line.startswith("- "):  # list item / link
+                case _ if line.startswith("- "):    # list item / link
                     if current_section_title is None:
                         info_buffer.append(line)
                     else:
@@ -89,7 +89,7 @@ class LlmsTxtExtractor:
                                     info_buffer.append("")
                                 section_info_started = True
                             info_buffer.append(line)
-                case _:  # info / paragraph
+                case _:                             # info / paragraph
                     if current_section_title is not None and not section_info_started:
                         if info_buffer and info_buffer[-1] != "":
                             info_buffer.append("")
