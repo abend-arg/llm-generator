@@ -8,29 +8,7 @@ from domain import ExtractedContent, FileSection, HtmlPolicies, LinkItem, Source
 
 
 class HtmlExtractor:
-    _POLICIES = HtmlPolicies(
-        reject_keywords={
-            "testimonial",
-            "testimonials",
-            "review",
-            "reviews",
-            "quote",
-            "quotes",
-            "social-proof",
-            "case-study",
-            "customer",
-        },
-        reject_link_keywords={
-            "/privacy",
-            "/terms",
-            "/login",
-            "/signup",
-            "/sign-up",
-            "/sign-in",
-            "/signin",
-            "/register",
-        },
-    )
+    _POLICIES = HtmlPolicies.default()
     _USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0 Safari/537.36"
 
     def extract(self, data: ExtractedContent) -> ExtractedContent:
