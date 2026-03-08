@@ -6,6 +6,8 @@ import httpx
 
 from domain import ExtractedContent, FileSection, LinkItem, SourceType
 
+from .contracts import CouldNotExtract
+
 
 class LlmsTxtExtractor:
     def _candidate_llms_urls(self, url: str) -> Iterable[str]:
@@ -27,13 +29,9 @@ class LlmsTxtExtractor:
             url_part, tail = rest.split(")", 1)
         except ValueError:
             return None
-        notes = tail.strip()
-        if notes.startswith(":"):
+        notes: str | None = tail.strip()
+        if notes and notes.startswith(":"):
             notes = notes[1:].strip()
-        elif notes:
-            notes = notes.strip()
-        else:
-            notes = None
         return LinkItem(name=name_part.strip(), url=url_part.strip(), notes=notes)
 
     def _parse_llms_txt(
@@ -100,7 +98,9 @@ class LlmsTxtExtractor:
 
         if current_section_title and current_section_items:
             sections.append(
-                FileSection(title=current_section_title, items=list(current_section_items))
+                FileSection(
+                    title=current_section_title, items=list(current_section_items)
+                )
             )
 
         if info_buffer:
@@ -108,13 +108,14 @@ class LlmsTxtExtractor:
 
         return title, summary, info, sections
 
-    def extract(self, data: ExtractedContent) -> ExtractedContent:
+    def extract(self, url: str) -> ExtractedContent:
         extracted_title: str | None = None
         extracted_summary: str | None = None
         extracted_info: str | None = None
         extracted_sections: list[FileSection] = []
+        found_file = False
 
-        for candidate in self._candidate_llms_urls(data.source_url):
+        for candidate in self._candidate_llms_urls(url):
             try:
                 response = httpx.get(candidate, timeout=2.0)
             except httpx.RequestError:
@@ -124,25 +125,20 @@ class LlmsTxtExtractor:
             text = response.text.strip()
             if not text:
                 continue
+            found_file = True
             extracted_title, extracted_summary, extracted_info, extracted_sections = (
                 self._parse_llms_txt(text)
             )
             break
 
-        updates: dict[str, object] = {}
+        if not found_file:
+            raise CouldNotExtract("llms.txt not found")
 
-        if not data.title and extracted_title:
-            updates["title"] = extracted_title
-        if data.summary is None and extracted_summary is not None:
-            updates["summary"] = extracted_summary
-        if data.info is None and extracted_info is not None:
-            updates["info"] = extracted_info
-        if extracted_sections:
-            updates["sections"] = [*data.sections, *extracted_sections]
-        if extracted_title or extracted_summary or extracted_info or extracted_sections:
-            updates["source_type"] = SourceType.LLMS_TXT
-
-        if not updates:
-            return data
-
-        return replace(data, **updates)
+        return ExtractedContent(
+            source_url=url,
+            source_type=SourceType.LLMS_TXT,
+            title=extracted_title,
+            summary=extracted_summary,
+            info=extracted_info,
+            sections=extracted_sections,
+        )
