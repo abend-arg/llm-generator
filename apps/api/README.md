@@ -2,7 +2,7 @@
 
 ## Intro
 
-FastAPI service with a hexagonal-architecture base. The presentation layer lives in `presentation/` and exposes a router with `/ping`.
+FastAPI service with a hexagonal-architecture base. The presentation layer lives in `presentation/` and exposes `/ping` and `/export-content`.
 
 ## Requirements
 

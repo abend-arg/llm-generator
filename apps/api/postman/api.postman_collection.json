@@ -17,6 +17,23 @@
         "header": [],
         "url": "{{base_url}}/ping"
       }
+    },
+    {
+      "name": "POST /export-content",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"url\": \"https://example.com\"\n}"
+        },
+        "url": "{{base_url}}/export-content"
+      }
     }
   ]
 }
