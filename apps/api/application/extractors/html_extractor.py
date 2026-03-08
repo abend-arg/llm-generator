@@ -91,7 +91,12 @@ class HtmlExtractor:
 
     def _fetch(self, url: str) -> httpx.Response | None:
         try:
-            response = httpx.get(url, timeout=2.0)
+            response = httpx.get(
+                url,
+                timeout=5.0,
+                follow_redirects=True,
+                headers={"User-Agent": self._USER_AGENT},
+            )
         except httpx.RequestError:
             return None
         if response.status_code != 200:
