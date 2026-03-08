@@ -1,5 +1,18 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
+
+
+@dataclass(frozen=True, slots=True)
+class LinkItem:
+    name: str
+    url: str
+    notes: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class FileSection:
+    title: str
+    items: list[LinkItem] = field(default_factory=list)
 
 
 class SourceType(str, Enum):
