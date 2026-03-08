@@ -1,7 +1,8 @@
 from fastapi import Depends
 
 from domain import ExtractedContent, SourceType
-from .extractors import ExtractorProtocol
+
+from .extractors import CouldNotExtract, ExtractorProtocol
 from .extractors.deps import get_extractors
 from .renderers import LlmsTxtRenderer, RendererProtocol
 
@@ -16,14 +17,10 @@ class ExportContentService:
         self._extractors = extractors
 
     def export(self, url: str) -> tuple[str, str]:
-        data = ExtractedContent(
-            source_url=url,
-            source_type=SourceType.HTML,
-            title=None,
-            summary=None,
-            info=None,
-            sections=[],
-        )
         for extractor in self._extractors:
-            data = extractor.extract(data)
+            try:
+                data = extractor.extract(url)
+            except CouldNotExtract:
+                continue
+            break
         return self._renderer.render(data)
