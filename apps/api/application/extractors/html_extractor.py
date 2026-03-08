@@ -33,14 +33,7 @@ class HtmlExtractor:
             return data
 
         soup = BeautifulSoup(response.text, "html.parser")
-        if soup.title and soup.title.string:
-            raw_title = soup.title.string.strip()
-            if raw_title:
-                extracted_title = raw_title
-        if not extracted_title:
-            h1 = soup.find("h1")
-            if h1 and h1.get_text(strip=True):
-                extracted_title = h1.get_text(strip=True)
+        extracted_title = self._extract_title(soup)
 
         if extracted_summary is None:
             extracted_summary, extracted_info = self._extract_summary_and_info(soup)
@@ -127,3 +120,13 @@ class HtmlExtractor:
         info_candidates = [c for c in candidates if c != best_text and len(c) >= 80]
         info = "\n\n".join(info_candidates) if info_candidates else None
         return summary, info
+
+    def _extract_title(self, soup: BeautifulSoup) -> str | None:
+        if soup.title and soup.title.string:
+            raw_title = soup.title.string.strip()
+            if raw_title:
+                return raw_title
+        h1 = soup.find("h1")
+        if h1 and h1.get_text(strip=True):
+            return h1.get_text(strip=True)
+        return None
