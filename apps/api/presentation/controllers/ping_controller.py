@@ -1,6 +1,5 @@
-from fastapi import Depends
-
 from application import PingService
+from fastapi import Depends
 
 
 class PingController:
