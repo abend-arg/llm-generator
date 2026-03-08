@@ -45,6 +45,7 @@ make format         # ruff (imports + lint) + ruff format
 make type           # mypy
 make test           # pytest
 make run            # starts the API with uvicorn
+make run-local      # starts the API with CORS for local web
 ```
 
 ## Postman
