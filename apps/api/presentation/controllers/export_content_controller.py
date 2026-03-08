@@ -1,5 +1,6 @@
-from application import ExportContentService
 from fastapi import Depends
+
+from application import ExportContentService
 
 
 class ExportContentController:
