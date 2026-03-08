@@ -24,7 +24,7 @@ class SourceType(str, Enum):
 class ExtractedContent:
     source_url: str
     source_type: SourceType
-    title: str
+    title: str | None = None
     summary: str | None = None
     info: str | None = None
     sections: list[FileSection] = field(default_factory=list)

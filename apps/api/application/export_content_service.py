@@ -19,7 +19,7 @@ class ExportContentService:
         data = ExtractedContent(
             source_url=url,
             source_type=SourceType.HTML,
-            title=url,
+            title=None,
             summary=None,
             info=None,
             sections=[],
