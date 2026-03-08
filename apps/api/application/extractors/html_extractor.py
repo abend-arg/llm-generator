@@ -19,6 +19,17 @@ class HtmlExtractor:
         "case-study",
         "customer",
     }
+    _REJECT_LINK_KEYWORDS = {
+        "/privacy",
+        "/terms",
+        "/login",
+        "/signup",
+        "/sign-up",
+        "/sign-in",
+        "/signin",
+        "/register",
+    }
+    _USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0 Safari/537.36"
 
     def extract(self, data: ExtractedContent) -> ExtractedContent:
         extracted_title: str | None = None
