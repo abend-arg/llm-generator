@@ -18,10 +18,10 @@ npm install
 
 ## Environment
 
-Set the backend URL via `BE_API_URL` (frontend env var):
+Set the backend URL via `NEXT_PUBLIC_BE_API_URL` (frontend env var):
 
 ```env
-BE_API_URL=http://localhost:8000
+NEXT_PUBLIC_BE_API_URL=http://localhost:8000
 ```
 
 > If not set, the app falls back to `http://localhost:8000`.
@@ -42,3 +42,13 @@ http://localhost:3000
 
 - The API should be running (see `apps/api/README.md`).
 - In local dev, start the API with CORS enabled (`make run-local`).
+
+## Static Export (DigitalOcean)
+
+This app is configured for static export. Build and export with:
+
+```bash
+npm run build
+```
+
+The static files will be generated in the `out/` directory. Upload `out/` to DigitalOcean App Platform Static Sites (or any static host).

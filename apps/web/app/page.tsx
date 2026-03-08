@@ -7,7 +7,8 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const apiUrl = process.env.BE_API_URL ?? "http://localhost:8000";
+  const apiUrl =
+    process.env.NEXT_PUBLIC_BE_API_URL ?? "http://localhost:8000";
 
   const handleGenerate = async () => {
     setError(null);
