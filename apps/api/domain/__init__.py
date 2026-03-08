@@ -1,3 +1,3 @@
-from .models import ExtractedContent
+from .models import ExtractedContent, SourceType
 
-__all__ = ["ExtractedContent"]
+__all__ = ["ExtractedContent", "SourceType"]
