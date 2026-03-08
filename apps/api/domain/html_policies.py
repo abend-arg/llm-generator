@@ -6,6 +6,36 @@ from urllib.parse import urlsplit
 class HtmlPolicies:
     reject_keywords: set[str]
     reject_link_keywords: set[str]
+    min_summary_len: int
+    min_info_len: int
+
+    @classmethod
+    def default(cls) -> "HtmlPolicies":
+        return cls(
+            reject_keywords={
+                "testimonial",
+                "testimonials",
+                "review",
+                "reviews",
+                "quote",
+                "quotes",
+                "social-proof",
+                "case-study",
+                "customer",
+            },
+            reject_link_keywords={
+                "/privacy",
+                "/terms",
+                "/login",
+                "/signup",
+                "/sign-up",
+                "/sign-in",
+                "/signin",
+                "/register",
+            },
+            min_summary_len=100,
+            min_info_len=80,
+        )
 
     def is_rejected_node(self, classes: list[str], node_id: str) -> bool:
         haystack = " ".join(classes + [node_id]).lower()
