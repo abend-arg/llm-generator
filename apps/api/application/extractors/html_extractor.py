@@ -38,6 +38,10 @@ class HtmlExtractor:
 
         if extracted_summary is None:
             extracted_summary, extracted_info = self._extract_summary_and_info(soup)
+        if not extracted_sections:
+            extracted_sections = self._extract_useful_links(
+                soup, data.source_url, max_items=12
+            )
 
         updates: dict[str, object] = {}
 
