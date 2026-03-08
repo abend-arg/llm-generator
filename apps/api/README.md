@@ -15,6 +15,8 @@ FastAPI service with a hexagonal-architecture base. The presentation layer lives
 make run
 ```
 
+OpenAPI docs are available at `/docs` once the API is running.
+
 ## Local Environment Setup
 
 ```bash
