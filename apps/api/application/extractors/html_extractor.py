@@ -63,11 +63,19 @@ class HtmlExtractor:
 
         return replace(data, **updates)
 
-    def _is_rejected(self, tag, reject_keywords: set[str]) -> bool:
+    def _is_rejected(self, tag) -> bool:
         classes = tag.get("class") or []
         tag_id = tag.get("id") or ""
         haystack = " ".join(classes + [tag_id]).lower()
-        return any(word in haystack for word in reject_keywords)
+        return any(word in haystack for word in self._REJECT_KEYWORDS)
+
+    def _is_rejected_tree(self, tag) -> bool:
+        current = tag
+        while current:
+            if self._is_rejected(current):
+                return True
+            current = current.parent
+        return False
 
     def _has_hs(self, tag) -> bool:
         return tag.find(["h1", "h2", "h3"], recursive=False) is not None
