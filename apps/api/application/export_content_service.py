@@ -1,6 +1,8 @@
 from fastapi import Depends
 
-from .extractors import ExtractorSelector
+from domain import ExtractedContent, SourceType
+from .extractors import ExtractorProtocol
+from .extractors.deps import get_extractors
 from .renderers import LlmsTxtRenderer, RendererProtocol
 
 
@@ -8,12 +10,20 @@ class ExportContentService:
     def __init__(
         self,
         renderer: RendererProtocol = Depends(LlmsTxtRenderer),
-        selector: ExtractorSelector = Depends(),
+        extractors: list[ExtractorProtocol] = Depends(get_extractors),
     ) -> None:
         self._renderer = renderer
-        self._selector = selector
+        self._extractors = extractors
 
     def export(self, url: str) -> tuple[str, str]:
-        extractor = self._selector.pick(url)
-        data = extractor.extract(url)
+        data = ExtractedContent(
+            source_url=url,
+            source_type=SourceType.HTML,
+            title=url,
+            summary=None,
+            notes=[],
+            sections=[],
+        )
+        for extractor in self._extractors:
+            data = extractor.extract(data)
         return self._renderer.render(data)
