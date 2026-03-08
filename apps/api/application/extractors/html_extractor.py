@@ -1,9 +1,10 @@
 from dataclasses import replace
+from urllib.parse import urljoin, urlsplit
 
 import httpx
 from bs4 import BeautifulSoup
 
-from domain import ExtractedContent, SourceType
+from domain import ExtractedContent, FileSection, LinkItem, SourceType
 
 
 class HtmlExtractor:
@@ -130,3 +131,36 @@ class HtmlExtractor:
         if h1 and h1.get_text(strip=True):
             return h1.get_text(strip=True)
         return None
+
+    def _extract_useful_links(
+        self, soup: BeautifulSoup, base_url: str, max_items: int
+    ) -> list[FileSection]:
+        base = urlsplit(base_url)
+        if not base.scheme or not base.netloc:
+            return []
+
+        items: list[LinkItem] = []
+        seen: set[str] = set()
+
+        for a in soup.find_all("a", href=True):
+            href = a.get("href", "").strip()
+            if not href or href.startswith(("#", "mailto:", "tel:", "javascript:")):
+                continue
+            absolute = urljoin(base_url, href)
+            parts = urlsplit(absolute)
+            if parts.netloc != base.netloc:
+                continue
+            text = a.get_text(" ", strip=True)
+            if not text:
+                continue
+            if absolute in seen:
+                continue
+            seen.add(absolute)
+            items.append(LinkItem(name=text, url=absolute))
+            if len(items) >= max_items:
+                break
+
+        if not items:
+            return []
+
+        return [FileSection(title="Useful Links", items=items)]
