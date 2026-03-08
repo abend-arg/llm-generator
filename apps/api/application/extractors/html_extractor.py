@@ -7,6 +7,18 @@ from domain import ExtractedContent, SourceType
 
 
 class HtmlExtractor:
+    _REJECT_KEYWORDS = {
+        "testimonial",
+        "testimonials",
+        "review",
+        "reviews",
+        "quote",
+        "quotes",
+        "social-proof",
+        "case-study",
+        "customer",
+    }
+
     def extract(self, data: ExtractedContent) -> ExtractedContent:
         extracted_title: str | None = None
         extracted_summary: str | None = None
