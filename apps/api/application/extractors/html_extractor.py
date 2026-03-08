@@ -6,23 +6,25 @@ from bs4 import BeautifulSoup
 
 from domain import ExtractedContent, FileSection, HtmlPolicies, LinkItem, SourceType
 
+from .contracts import CouldNotExtract
+
 
 class HtmlExtractor:
     _POLICIES = HtmlPolicies.default()
     _USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0 Safari/537.36"
 
-    def extract(self, data: ExtractedContent) -> ExtractedContent:
+    def extract(self, url: str) -> ExtractedContent:
         extracted_title: str | None = None
         extracted_summary: str | None = None
         extracted_info: str | None = None
-        extracted_sections = []
+        extracted_sections: list[FileSection] = []
 
-        if not data.source_url:
-            return data
+        if not url:
+            raise CouldNotExtract("missing url")
 
-        response = self._fetch(data.source_url)
+        response = self._fetch(url)
         if response is None:
-            return data
+            raise CouldNotExtract("html fetch failed")
 
         soup = BeautifulSoup(response.text, "html.parser")
         extracted_title = self._extract_title(soup)
@@ -30,27 +32,21 @@ class HtmlExtractor:
         if extracted_summary is None:
             extracted_summary, extracted_info = self._extract_summary_and_info(soup)
         if not extracted_sections:
-            extracted_sections = self._extract_useful_links(
-                soup, data.source_url, max_items=12
-            )
+            extracted_sections = self._extract_useful_links(soup, url, max_items=12)
 
-        updates: dict[str, object] = {}
+        if not any(
+            [extracted_title, extracted_summary, extracted_info, extracted_sections]
+        ):
+            raise CouldNotExtract("html extraction produced no data")
 
-        if not data.title and extracted_title:
-            updates["title"] = extracted_title
-        if data.summary is None and extracted_summary is not None:
-            updates["summary"] = extracted_summary
-        if data.info is None and extracted_info is not None:
-            updates["info"] = extracted_info
-        if extracted_sections:
-            updates["sections"] = [*data.sections, *extracted_sections]
-        if extracted_title:
-            updates["source_type"] = SourceType.HTML
-
-        if not updates:
-            return data
-
-        return replace(data, **updates)
+        return ExtractedContent(
+            source_url=url,
+            source_type=SourceType.HTML,
+            title=extracted_title,
+            summary=extracted_summary,
+            info=extracted_info,
+            sections=extracted_sections,
+        )
 
     def _is_rejected(self, tag) -> bool:
         classes = tag.get("class") or []
@@ -137,7 +133,9 @@ class HtmlExtractor:
         seen: set[str] = set()
 
         for a in soup.find_all("a", href=True):
-            href = a.get("href", "").strip()
+            href_val = a.get("href")
+            href = href_val if isinstance(href_val, str) else ""
+            href = href.strip()
             if not href or href.startswith(("#", "mailto:", "tel:", "javascript:")):
                 continue
             absolute = urljoin(base_url, href)
