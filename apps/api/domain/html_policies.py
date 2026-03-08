@@ -53,7 +53,7 @@ class HtmlPolicies:
         if not candidates:
             return None
         best = max(candidates, key=len)
-        if len(best) < 100:
+        if len(best) < self.min_summary_len:
             return None
         return best
 
@@ -62,7 +62,9 @@ class HtmlPolicies:
             return None
         if not summary:
             return None
-        info_candidates = [c for c in candidates if c != summary and len(c) >= 80]
+        info_candidates = [
+            c for c in candidates if c != summary and len(c) >= self.min_info_len
+        ]
         if not info_candidates:
             return None
         return "\n\n".join(info_candidates)
