@@ -170,6 +170,8 @@ class HtmlExtractor:
             parts = urlsplit(absolute)
             if parts.netloc != base.netloc:
                 continue
+            if any(keyword in parts.path for keyword in self._REJECT_LINK_KEYWORDS):
+                continue
             text = a.get_text(" ", strip=True)
             if not text:
                 continue
