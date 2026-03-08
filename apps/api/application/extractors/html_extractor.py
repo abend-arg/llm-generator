@@ -16,11 +16,8 @@ class HtmlExtractor:
         if not data.source_url:
             return data
 
-        try:
-            response = httpx.get(data.source_url, timeout=2.0)
-        except httpx.RequestError:
-            return data
-        if response.status_code != 200:
+        response = self._fetch(data.source_url)
+        if response is None:
             return data
 
         soup = BeautifulSoup(response.text, "html.parser")
