@@ -1,10 +1,15 @@
-from dataclasses import replace
-
-from domain import ExtractedContent
+from domain import ExtractedContent, SourceType
 
 
 class DefaultTitleExtractor:
-    def extract(self, data: ExtractedContent) -> ExtractedContent:
-        if data.title:
-            return data
-        return replace(data, title=data.source_url)
+    def extract(self, url: str) -> ExtractedContent:
+        if not url:
+            raise ValueError("missing url")
+        return ExtractedContent(
+            source_url=url,
+            source_type=SourceType.DEFAULT,
+            title=url,
+            summary=None,
+            info=None,
+            sections=[],
+        )
