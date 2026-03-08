@@ -4,31 +4,33 @@ from urllib.parse import urljoin, urlsplit
 import httpx
 from bs4 import BeautifulSoup
 
-from domain import ExtractedContent, FileSection, LinkItem, SourceType
+from domain import ExtractedContent, FileSection, HtmlPolicies, LinkItem, SourceType
 
 
 class HtmlExtractor:
-    _REJECT_KEYWORDS = {
-        "testimonial",
-        "testimonials",
-        "review",
-        "reviews",
-        "quote",
-        "quotes",
-        "social-proof",
-        "case-study",
-        "customer",
-    }
-    _REJECT_LINK_KEYWORDS = {
-        "/privacy",
-        "/terms",
-        "/login",
-        "/signup",
-        "/sign-up",
-        "/sign-in",
-        "/signin",
-        "/register",
-    }
+    _POLICIES = HtmlPolicies(
+        reject_keywords={
+            "testimonial",
+            "testimonials",
+            "review",
+            "reviews",
+            "quote",
+            "quotes",
+            "social-proof",
+            "case-study",
+            "customer",
+        },
+        reject_link_keywords={
+            "/privacy",
+            "/terms",
+            "/login",
+            "/signup",
+            "/sign-up",
+            "/sign-in",
+            "/signin",
+            "/register",
+        },
+    )
     _USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0 Safari/537.36"
 
     def extract(self, data: ExtractedContent) -> ExtractedContent:
@@ -75,8 +77,7 @@ class HtmlExtractor:
     def _is_rejected(self, tag) -> bool:
         classes = tag.get("class") or []
         tag_id = tag.get("id") or ""
-        haystack = " ".join(classes + [tag_id]).lower()
-        return any(word in haystack for word in self._REJECT_KEYWORDS)
+        return self._POLICIES.is_rejected_node(classes, tag_id)
 
     def _is_rejected_tree(self, tag) -> bool:
         current = tag
@@ -133,13 +134,8 @@ class HtmlExtractor:
         if not candidates:
             return None, None
 
-        best_text = max(candidates, key=len)
-        if len(best_text) < 100:
-            return None, None
-
-        summary = best_text
-        info_candidates = [c for c in candidates if c != best_text and len(c) >= 80]
-        info = "\n\n".join(info_candidates) if info_candidates else None
+        summary = self._POLICIES.select_summary(candidates)
+        info = self._POLICIES.select_info(candidates, summary)
         return summary, info
 
     def _extract_title(self, soup: BeautifulSoup) -> str | None:
@@ -168,9 +164,7 @@ class HtmlExtractor:
                 continue
             absolute = urljoin(base_url, href)
             parts = urlsplit(absolute)
-            if parts.netloc != base.netloc:
-                continue
-            if any(keyword in parts.path for keyword in self._REJECT_LINK_KEYWORDS):
+            if not self._POLICIES.is_useful_link(absolute, base.netloc):
                 continue
             text = a.get_text(" ", strip=True)
             if not text:
