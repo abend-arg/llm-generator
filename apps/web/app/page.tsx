@@ -6,6 +6,14 @@ export default function Home() {
   const [url, setUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isValidUrl = (() => {
+    try {
+      const parsed = new URL(url);
+      return parsed.protocol === "http:" || parsed.protocol === "https:";
+    } catch {
+      return false;
+    }
+  })();
 
   const apiUrl =
     process.env.NEXT_PUBLIC_BE_API_URL ?? "http://localhost:8000";
@@ -69,7 +77,7 @@ export default function Home() {
           />
           <button
             onClick={handleGenerate}
-            disabled={isLoading}
+            disabled={isLoading || !isValidUrl}
             className="h-11 w-full rounded-lg bg-zinc-900 text-sm font-medium text-white transition disabled:opacity-60"
           >
             {isLoading ? "Generating..." : "Generate File"}
