@@ -1,4 +1,12 @@
 from .html_policies import HtmlPolicies
-from .models import ExtractedContent, FileSection, LinkItem, SourceType
+from .extractor_policies import EXTRACTOR_ORDER
+from .models import ExtractedContent, ExtractionStrategy, FileSection, LinkItem
 
-__all__ = ["ExtractedContent", "FileSection", "LinkItem", "SourceType", "HtmlPolicies"]
+__all__ = [
+    "ExtractedContent",
+    "FileSection",
+    "LinkItem",
+    "ExtractionStrategy",
+    "HtmlPolicies",
+    "EXTRACTOR_ORDER",
+]

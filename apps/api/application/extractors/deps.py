@@ -1,5 +1,7 @@
 from fastapi import Depends
 
+from domain import EXTRACTOR_ORDER, ExtractionStrategy
+
 from .contracts import ExtractorProtocol
 from .crawler_extractor import CrawlerExtractor
 from .default_title_extractor import DefaultTitleExtractor
@@ -13,4 +15,10 @@ def get_extractors(
     crawler: CrawlerExtractor = Depends(CrawlerExtractor),
     default_title: DefaultTitleExtractor = Depends(DefaultTitleExtractor),
 ) -> list[ExtractorProtocol]:
-    return [llms, html, crawler, default_title]
+    registry: dict[ExtractionStrategy, ExtractorProtocol] = {
+        ExtractionStrategy.LLMS_TXT: llms,
+        ExtractionStrategy.HTML: html,
+        ExtractionStrategy.CRAWLER: crawler,
+        ExtractionStrategy.DEFAULT: default_title,
+    }
+    return [registry[key] for key in EXTRACTOR_ORDER]

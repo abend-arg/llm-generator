@@ -4,7 +4,7 @@ from urllib.parse import urlsplit
 
 import httpx
 
-from domain import ExtractedContent, FileSection, LinkItem, SourceType
+from domain import ExtractedContent, ExtractionStrategy, FileSection, LinkItem
 
 from .contracts import CouldNotExtract
 
@@ -138,7 +138,7 @@ class LlmsTxtExtractor:
 
         return ExtractedContent(
             source_url=url,
-            source_type=SourceType.LLMS_TXT,
+            extraction_strategy=ExtractionStrategy.LLMS_TXT,
             title=extracted_title,
             summary=extracted_summary,
             info=extracted_info,

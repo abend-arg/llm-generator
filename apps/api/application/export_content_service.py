@@ -1,7 +1,5 @@
 from fastapi import Depends
 
-from domain import ExtractedContent, SourceType
-
 from .extractors import CouldNotExtract, ExtractorProtocol
 from .extractors.deps import get_extractors
 from .renderers import LlmsTxtRenderer, RendererProtocol

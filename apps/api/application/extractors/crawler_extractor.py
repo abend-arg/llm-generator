@@ -4,7 +4,13 @@ from urllib.parse import urljoin, urlsplit
 import httpx
 from bs4 import BeautifulSoup
 
-from domain import ExtractedContent, FileSection, HtmlPolicies, LinkItem, SourceType
+from domain import (
+    ExtractedContent,
+    ExtractionStrategy,
+    FileSection,
+    HtmlPolicies,
+    LinkItem,
+)
 from .contracts import CouldNotExtract
 
 
@@ -32,7 +38,7 @@ class CrawlerExtractor:
 
         return ExtractedContent(
             source_url=url,
-            source_type=SourceType.CRAWLER,
+            extraction_strategy=ExtractionStrategy.CRAWLER,
             title=title,
             summary=summary,
             info=info,

@@ -15,7 +15,7 @@ class FileSection:
     items: list[LinkItem] = field(default_factory=list)
 
 
-class SourceType(str, Enum):
+class ExtractionStrategy(str, Enum):
     LLMS_TXT = "llms_txt"
     HTML = "html"
     DEFAULT = "default"
@@ -25,7 +25,7 @@ class SourceType(str, Enum):
 @dataclass(frozen=True, slots=True)
 class ExtractedContent:
     source_url: str
-    source_type: SourceType
+    extraction_strategy: ExtractionStrategy
     title: str | None = None
     summary: str | None = None
     info: str | None = None

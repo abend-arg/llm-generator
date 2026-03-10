@@ -1,4 +1,4 @@
-from domain import ExtractedContent, SourceType
+from domain import ExtractedContent, ExtractionStrategy
 
 
 class DefaultTitleExtractor:
@@ -7,7 +7,7 @@ class DefaultTitleExtractor:
             raise ValueError("missing url")
         return ExtractedContent(
             source_url=url,
-            source_type=SourceType.DEFAULT,
+            extraction_strategy=ExtractionStrategy.DEFAULT,
             title=url,
             summary=None,
             info=None,

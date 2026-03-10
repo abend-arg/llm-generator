@@ -1,7 +1,7 @@
 import httpx
 from bs4 import BeautifulSoup
 
-from domain import ExtractedContent, HtmlPolicies, SourceType
+from domain import ExtractedContent, ExtractionStrategy, HtmlPolicies
 
 from .contracts import CouldNotExtract
 from .html_common import extract_summary_and_info, extract_title, extract_useful_links
@@ -36,7 +36,7 @@ class SinglePageExtractor:
 
         return ExtractedContent(
             source_url=url,
-            source_type=SourceType.HTML,
+            extraction_strategy=ExtractionStrategy.HTML,
             title=title,
             summary=summary,
             info=info,
