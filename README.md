@@ -1,11 +1,24 @@
 # llm-generator
 
-Minimal project to generate `llms.txt` files from a URL.
+Project to generate `llms.txt` files from a URL, with a backend API and a web frontend.
 
-## Overview
+## Description
 
-- `apps/api`: FastAPI backend that generates the file.
-- `apps/web`: Next.js frontend to submit a URL and download the result.
+The system takes a URL, attempts to fetch an existing `llms.txt`, and if not available, extracts content from HTML to build a `llms.txt` with useful sections. It is designed to be extensible with multiple extractors and renderers.
+
+## Tech Stack
+
+- Backend: FastAPI (Python 3.12+)
+- Frontend: Next.js (React)
+- HTML parsing: BeautifulSoup + httpx
+- Validation: Pydantic
+
+## Requirements
+
+- Python 3.12+
+- Node.js 18+ (recommended)
+- `uv` for the backend
+- npm/pnpm/yarn/bun for the frontend
 
 ## Run Local
 
@@ -16,9 +29,12 @@ make run-local
 ```
 
 This starts:
-- API (`apps/api`) with CORS for local web.
-- Web (`apps/web`) in dev mode.
+- API (`apps/api`) with local CORS
+- Web (`apps/web`) in dev mode
 
-See each app README for more details:
-- `apps/api/README.md`
-- `apps/web/README.md`
+## More Info
+
+- API details (architecture, parsing): `apps/api/README.md`
+- Web details: `apps/web/README.md`
+
+Both READMEs include a **Future Work** section for follow‑ups and production hardening ideas.

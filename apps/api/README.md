@@ -2,17 +2,52 @@
 
 ## Intro
 
-FastAPI service with a hexagonal-architecture base. The presentation layer lives in `presentation/` and exposes `/ping` and `/export-content`.
+FastAPI service that generates `llms.txt` from a URL. It exposes `/ping` and `/export-content`.
+
+## Architecture
+
+Hexagonal layers:
+- `presentation` (router + controllers)
+- `application` (services, extractors, renderers)
+- `domain` (models and policies)
+
+## Parsing Strategy
+
+- The pipeline tries extractors in order and stops on the first successful one.
+- Each extractor decides when it “cannot extract” and raises `CouldNotExtract` to allow fallback.
+
+Current order:
+- `LlmsTxtExtractor` (prefers existing `/.well-known/llms.txt` or `/llms.txt`)
+- `HtmlExtractor` (fallback)
+- `DefaultTitleExtractor` (last resort)
+
+### Flexible llms.txt parsing
+
+The `llms.txt` parsing is intentionally tolerant to non‑standard files:
+- Ignores `###` subheaders.
+- Keeps non‑link content as `info` (preserving lists and blank lines).
+- Drops empty sections.
+- Allows mixed content within sections (non‑link lines go to `info`).
+
+### HTML extraction notes
+
+- Summary is selected from containers with headings, with reject keywords to avoid testimonials.
+- Useful links are derived from internal anchors and filtered (privacy/login/etc.).
+- Policies (thresholds and filters) live in `domain/html_policies.py`.
 
 ## Requirements
 
 - Python 3.12+
-- `uv` (install: https://docs.astral.sh/uv/)
+- `uv` (install:)
+
+```text
+https://docs.astral.sh/uv/
+```
 
 ## Run API
 
 ```bash
-make run
+make run-local
 ```
 
 OpenAPI docs are available at `/docs` once the API is running.
@@ -20,7 +55,7 @@ OpenAPI docs are available at `/docs` once the API is running.
 ## Local Environment Setup
 
 ```bash
-cd /home/abend/Dev/llm-generator/apps/api
+cd apps/api
 uv sync --group dev
 ```
 
@@ -54,13 +89,15 @@ The Postman collection lives in `postman/api.postman_collection.json` and uses a
 
 ## Dependency Management with uv
 
-Add runtime dependencies:
+Examples:
+
+To add runtime dependencies:
 
 ```bash
 uv add fastapi
 ```
 
-Add development dependencies by group:
+Or development dependencies by group:
 
 ```bash
 uv add --group lint ruff
@@ -69,16 +106,23 @@ uv add --group type mypy
 uv add --group hooks pre-commit
 ```
 
-Install a single group:
+To install a single group:
 
 ```bash
 uv sync --group test
 ```
 
-Install all dev groups:
+To install all dev groups:
 
 ```bash
 uv sync --group dev
 ```
 
 > Note: the `dev` group includes `lint`, `test`, `type`, and `hooks` via `include-group`.
+
+## Future Work
+
+- Tests (unit/integration) to validate extractors and renderers against real sites.
+- Structured logging and metrics for production visibility.
+- Extractor for JS-heavy pages (SPAs) using a headless browser (e.g., Playwright) as fallback.
+- Alternative pipeline: extract human-readable text and use an LLM integration to draft `llms.txt`.

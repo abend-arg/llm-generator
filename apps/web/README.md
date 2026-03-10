@@ -2,7 +2,7 @@
 
 ## Intro
 
-Minimal Next.js frontend to generate and download `llms.txt` from a URL using the API.
+Minimal Next.js frontend to generate and download `llms.txt` from a URL using the API. The app is designed to be exported as a static site to take advantage of inexpensive static hosting in the cloud.
 
 ## Requirements
 
@@ -12,8 +12,8 @@ Minimal Next.js frontend to generate and download `llms.txt` from a URL using th
 ## Local Environment Setup
 
 ```bash
-cd /home/abend/Dev/llm-generator/apps/web
-npm install
+cd apps/web
+make install
 ```
 
 ## Environment
@@ -21,12 +21,20 @@ npm install
 Set the backend URL via `NEXT_PUBLIC_BE_API_URL` (frontend env var):
 
 ```env
-NEXT_PUBLIC_BE_API_URL=http://localhost:8000
+NEXT_PUBLIC_BE_API_URL=http://example.com/api
 ```
 
 > If not set, the app falls back to `http://localhost:8000`.
 
 ## Run Dev Server
+
+Using Makefile:
+
+```bash
+make dev
+```
+
+Or directly:
 
 ```bash
 npm run dev
@@ -41,14 +49,21 @@ http://localhost:3000
 ## Notes
 
 - The API should be running (see `apps/api/README.md`).
-- In local dev, start the API with CORS enabled (`make run-local`).
 
-## Static Export (DigitalOcean)
+## Static Export
 
-This app is configured for static export. Build and export with:
+This app is configured for static export (ideal for any static host).
 
 ```bash
+make build
+# or
 npm run build
 ```
 
-The static files will be generated in the `out/` directory. Upload `out/` to DigitalOcean App Platform Static Sites (or any static host).
+The static files will be generated in the `out/` directory. 
+
+## Future Work
+
+- UI polish (layout/spacing, visual hierarchy, states).
+- Optional stream of user interactions (analytics/usage events) if needed.
+- Automated UI tests (Playwright, Cypress, or Selenium).
