@@ -96,7 +96,7 @@ class CrawlerExtractor:
         if not base.scheme or not base.netloc:
             return []
 
-        items: list[LinkItem] = []
+        raw_items: list[tuple[str, str]] = []
         seen: set[str] = set()
 
         for a in soup.find_all("a", href=True):
@@ -114,13 +114,15 @@ class CrawlerExtractor:
             if absolute in seen:
                 continue
             seen.add(absolute)
-            items.append(LinkItem(name=text, url=absolute))
-            if len(items) >= max_items:
+            raw_items.append((text, absolute))
+            if len(raw_items) >= max_items * 3:
                 break
 
-        if not items:
+        if not raw_items:
             return []
 
+        ranked = self._POLICIES.select_useful_links(raw_items, max_items)
+        items = [LinkItem(name=name, url=link) for name, link in ranked]
         return [FileSection(title="Useful Links", items=items)]
 
     def _extract_internal_links(self, base_url: str, soup: BeautifulSoup) -> Iterable[str]:

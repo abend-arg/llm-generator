@@ -18,7 +18,7 @@ Hexagonal layers:
 
 Current order:
 - `LlmsTxtExtractor` (prefers existing `/.well-known/llms.txt` or `/llms.txt`)
-- `HtmlExtractor` (fallback)
+- `SinglePageExtractor` (single-page HTML fallback)
 - `DefaultTitleExtractor` (last resort)
 
 ### Flexible llms.txt parsing

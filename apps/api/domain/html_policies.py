@@ -9,6 +9,7 @@ class HtmlPolicies:
     min_summary_len: int
     min_info_len: int
     min_links: int
+    link_rank_keywords: dict[str, int]
 
     @classmethod
     def default(cls) -> "HtmlPolicies":
@@ -37,6 +38,24 @@ class HtmlPolicies:
             min_summary_len=100,
             min_info_len=80,
             min_links=3,
+            link_rank_keywords={
+                "about": 5,
+                "company": 4,
+                "documentation": 8,
+                "docs": 7,
+                "api": 6,
+                "faq": 7,
+                "help": 5,
+                "support": 5,
+                "pricing": 5,
+                "product": 4,
+                "features": 4,
+                "contact": 3,
+                "blog": 2,
+                "changelog": 2,
+                "security": 3,
+                "status": 2,
+            },
         )
 
     def is_rejected_node(self, classes: list[str], node_id: str) -> bool:
@@ -50,6 +69,24 @@ class HtmlPolicies:
         if any(keyword in parts.path for keyword in self.reject_link_keywords):
             return False
         return True
+
+    def link_rank(self, text: str, url: str) -> int:
+        haystack = f"{text} {url}".lower()
+        score = 0
+        for keyword, weight in self.link_rank_keywords.items():
+            if keyword in haystack:
+                score += weight
+        return score
+
+    def select_useful_links(
+        self, items: list[tuple[str, str]], max_items: int
+    ) -> list[tuple[str, str]]:
+        ranked = sorted(
+            items,
+            key=lambda item: (self.link_rank(item[0], item[1]), len(item[0])),
+            reverse=True,
+        )
+        return ranked[:max_items]
 
     def select_summary(self, candidates: list[str]) -> str | None:
         if not candidates:

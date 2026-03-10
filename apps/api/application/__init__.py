@@ -3,8 +3,8 @@ from .extractors import (
     CrawlerExtractor,
     DefaultTitleExtractor,
     ExtractorProtocol,
-    HtmlExtractor,
     LlmsTxtExtractor,
+    SinglePageExtractor,
 )
 from .ping_service import PingService
 from .renderers import LlmsTxtRenderer, RendererProtocol
@@ -15,7 +15,7 @@ __all__ = [
     "ExtractorProtocol",
     "CrawlerExtractor",
     "DefaultTitleExtractor",
-    "HtmlExtractor",
+    "SinglePageExtractor",
     "LlmsTxtExtractor",
     "LlmsTxtRenderer",
     "RendererProtocol",
