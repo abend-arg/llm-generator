@@ -8,6 +8,7 @@ class HtmlPolicies:
     reject_link_keywords: set[str]
     min_summary_len: int
     min_info_len: int
+    min_links: int
 
     @classmethod
     def default(cls) -> "HtmlPolicies":
@@ -35,6 +36,7 @@ class HtmlPolicies:
             },
             min_summary_len=100,
             min_info_len=80,
+            min_links=3,
         )
 
     def is_rejected_node(self, classes: list[str], node_id: str) -> bool:
@@ -68,3 +70,14 @@ class HtmlPolicies:
         if not info_candidates:
             return None
         return "\n\n".join(info_candidates)
+
+    def is_sufficient(
+        self, summary: str | None, info: str | None, links_count: int
+    ) -> bool:
+        if links_count >= self.min_links:
+            return True
+        if summary and len(summary) >= self.min_summary_len:
+            return True
+        if info and len(info) >= self.min_info_len:
+            return True
+        return False

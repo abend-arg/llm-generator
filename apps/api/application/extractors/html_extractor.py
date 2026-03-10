@@ -34,6 +34,12 @@ class HtmlExtractor:
         if not extracted_sections:
             extracted_sections = self._extract_useful_links(soup, url, max_items=12)
 
+        links_count = sum(len(section.items) for section in extracted_sections)
+        if not self._POLICIES.is_sufficient(
+            extracted_summary, extracted_info, links_count
+        ):
+            raise CouldNotExtract("html extraction not sufficient")
+
         if not any(
             [extracted_title, extracted_summary, extracted_info, extracted_sections]
         ):
