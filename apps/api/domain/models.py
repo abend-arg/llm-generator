@@ -19,6 +19,7 @@ class SourceType(str, Enum):
     LLMS_TXT = "llms_txt"
     HTML = "html"
     DEFAULT = "default"
+    CRAWLER = "crawler"
 
 
 @dataclass(frozen=True, slots=True)
