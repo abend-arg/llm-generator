@@ -43,7 +43,9 @@ class CrawlerExtractor:
 
         all_candidates: list[str] = []
         for page in pages:
-            all_candidates.extend(collect_candidates(page["soup"], self._POLICIES))
+            all_candidates.extend(
+                [p.text for p in collect_candidates(page["soup"], self._POLICIES)]
+            )
         sorted_candidates = sorted(all_candidates, key=len, reverse=True)
         summary = self._POLICIES.select_summary(sorted_candidates)
         info = None
