@@ -42,7 +42,7 @@ class HtmlPolicies:
                 "/register",
             },
             min_summary_len=100,
-            max_summary_len=1000,
+            max_summary_len=500,
             min_info_len=80,
             max_info_len=400,
             max_info_items=6,
@@ -139,13 +139,10 @@ class HtmlPolicies:
     def select_summary(self, candidates: list[str]) -> str | None:
         if not candidates:
             return None
-        filtered = [c for c in candidates if len(c) <= self.max_summary_len]
+        filtered = [c for c in candidates if self.min_summary_len <= len(c) <= self.max_summary_len]
         if not filtered:
             return None
-        best = max(filtered, key=len)
-        if len(best) < self.min_summary_len:
-            return None
-        return best
+        return max(filtered, key=len)
 
 
     def select_info(self, candidates: list[str], summary: str | None) -> str | None:

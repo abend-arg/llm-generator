@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import Depends
 
 from .extractors import CouldNotExtract, ExtractorProtocol
@@ -6,6 +8,8 @@ from .renderers import LlmsTxtRenderer, RendererProtocol
 
 
 class ExportContentService:
+    _LOGGER = logging.getLogger(__name__)
+
     def __init__(
         self,
         renderer: RendererProtocol = Depends(LlmsTxtRenderer),
@@ -20,5 +24,8 @@ class ExportContentService:
                 data = extractor.extract(url)
             except CouldNotExtract:
                 continue
+            self._LOGGER.info(
+                "extractor_selected strategy=%s", data.extraction_strategy.value
+            )
             break
         return self._renderer.render(data)

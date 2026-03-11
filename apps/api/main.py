@@ -1,9 +1,13 @@
+import logging
 import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from presentation.router import router
+
+if not logging.getLogger().handlers:
+    logging.basicConfig(level=logging.INFO)
 
 
 def create_app() -> FastAPI:

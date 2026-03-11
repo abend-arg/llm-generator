@@ -72,7 +72,7 @@ def collect_candidates(soup: BeautifulSoup, policies: HtmlPolicies) -> list[str]
         if not nodes:
             continue
         text = "\n".join(
-            n.get_text("\n", strip=True)
+            _text_without_headings(n)
             for n in nodes
             if not is_rejected_tree(n, policies)
         ).strip()
@@ -83,11 +83,22 @@ def collect_candidates(soup: BeautifulSoup, policies: HtmlPolicies) -> list[str]
         for n in soup.find_all(["p", "li", "span", "div"]):
             if is_rejected_tree(n, policies):
                 continue
-            text = n.get_text("\n", strip=True)
+            text = _text_without_headings(n)
             if text:
                 candidates.append(text)
 
     return candidates
+
+
+def _text_without_headings(tag) -> str:
+    parts: list[str] = []
+    for node in tag.find_all(string=True):
+        if node.find_parent(["h1", "h2", "h3"]) is not None:
+            continue
+        text = node.strip()
+        if text:
+            parts.append(text)
+    return "\n".join(parts)
 
 
 def is_rejected_node(tag, policies: HtmlPolicies) -> bool:
