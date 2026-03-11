@@ -9,8 +9,13 @@ class HtmlPolicies:
     min_summary_len: int
     max_summary_len: int
     min_info_len: int
+    max_info_len: int
+    max_info_items: int
+    max_info_total_len: int
     min_links: int
     link_rank_keywords: dict[str, int]
+    info_rank_keywords: dict[str, int]
+    info_reject_keywords: set[str]
 
     @classmethod
     def default(cls) -> "HtmlPolicies":
@@ -37,8 +42,11 @@ class HtmlPolicies:
                 "/register",
             },
             min_summary_len=100,
-            max_summary_len=600,
+            max_summary_len=1000,
             min_info_len=80,
+            max_info_len=400,
+            max_info_items=6,
+            max_info_total_len=1500,
             min_links=3,
             link_rank_keywords={
                 "about": 5,
@@ -60,6 +68,41 @@ class HtmlPolicies:
                 "privacy": -3,
                 "legal": -3,
                 "terms": -2,
+            },
+            info_rank_keywords={
+                "about": 5,
+                "company": 4,
+                "documentation": 6,
+                "docs": 5,
+                "api": 4,
+                "faq": 5,
+                "help": 4,
+                "support": 4,
+                "pricing": 4,
+                "product": 3,
+                "features": 3,
+                "contact": 2,
+                "security": -2,
+                "privacy": -2,
+                "legal": -2,
+                "terms": -2,
+                "cookie": -2,
+                "cookies": -2,
+                "testimonial": -3,
+                "testimonials": -3,
+                "review": -3,
+                "reviews": -3,
+            },
+            info_reject_keywords={
+                "cookie",
+                "cookies",
+                "privacy",
+                "legal",
+                "terms",
+                "testimonial",
+                "testimonials",
+                "review",
+                "reviews",
             },
         )
 
@@ -110,12 +153,47 @@ class HtmlPolicies:
             return None
         if not summary:
             return None
-        info_candidates = [
-            c for c in candidates if c != summary and len(c) >= self.min_info_len
-        ]
-        if not info_candidates:
+        normalized: set[str] = set()
+        filtered: list[str] = []
+        for candidate in candidates:
+            if candidate == summary:
+                continue
+            if len(candidate) < self.min_info_len or len(candidate) > self.max_info_len:
+                continue
+            haystack = candidate.lower()
+            if any(word in haystack for word in self.info_reject_keywords):
+                continue
+            normalized_candidate = " ".join(haystack.split())
+            if normalized_candidate in normalized:
+                continue
+            normalized.add(normalized_candidate)
+            filtered.append(candidate)
+        if not filtered:
             return None
-        return "\n\n".join(info_candidates)
+
+        ranked = sorted(filtered, key=self._info_score, reverse=True)
+        selected: list[str] = []
+        total_len = 0
+        for candidate in ranked:
+            separator_len = 2 if selected else 0
+            candidate_len = len(candidate) + separator_len
+            if total_len + candidate_len > self.max_info_total_len:
+                continue
+            selected.append(candidate)
+            total_len += candidate_len
+            if len(selected) >= self.max_info_items:
+                break
+        if not selected:
+            return None
+        return "\n\n".join(selected)
+
+    def _info_score(self, text: str) -> int:
+        haystack = text.lower()
+        keyword_score = 0
+        for keyword, weight in self.info_rank_keywords.items():
+            if keyword in haystack:
+                keyword_score += weight
+        return keyword_score * 100 + len(text)
 
     def is_sufficient(
         self, summary: str | None, info: str | None, links_count: int
