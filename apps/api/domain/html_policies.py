@@ -7,6 +7,7 @@ class HtmlPolicies:
     reject_keywords: set[str]
     reject_link_keywords: set[str]
     min_summary_len: int
+    max_summary_len: int
     min_info_len: int
     min_links: int
     link_rank_keywords: dict[str, int]
@@ -36,6 +37,7 @@ class HtmlPolicies:
                 "/register",
             },
             min_summary_len=100,
+            max_summary_len=600,
             min_info_len=80,
             min_links=3,
             link_rank_keywords={
@@ -53,8 +55,11 @@ class HtmlPolicies:
                 "contact": 3,
                 "blog": 2,
                 "changelog": 2,
-                "security": 3,
                 "status": 2,
+                "security": -3,
+                "privacy": -3,
+                "legal": -3,
+                "terms": -2,
             },
         )
 
@@ -91,10 +96,14 @@ class HtmlPolicies:
     def select_summary(self, candidates: list[str]) -> str | None:
         if not candidates:
             return None
-        best = max(candidates, key=len)
+        filtered = [c for c in candidates if len(c) <= self.max_summary_len]
+        if not filtered:
+            return None
+        best = max(filtered, key=len)
         if len(best) < self.min_summary_len:
             return None
         return best
+
 
     def select_info(self, candidates: list[str], summary: str | None) -> str | None:
         if not candidates:
@@ -111,10 +120,8 @@ class HtmlPolicies:
     def is_sufficient(
         self, summary: str | None, info: str | None, links_count: int
     ) -> bool:
-        if links_count >= self.min_links:
-            return True
-        if summary and len(summary) >= self.min_summary_len:
-            return True
-        if info and len(info) >= self.min_info_len:
-            return True
-        return False
+        if not summary or len(summary) < self.min_summary_len:
+            return False
+        if not info or len(info) < self.min_info_len:
+            return False
+        return links_count >= self.min_links

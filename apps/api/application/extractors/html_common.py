@@ -83,7 +83,7 @@ def collect_candidates(soup: BeautifulSoup, policies: HtmlPolicies) -> list[str]
         for n in soup.find_all(["p", "li", "span", "div"]):
             if is_rejected_tree(n, policies):
                 continue
-            text = n.get_text(" ", strip=True)
+            text = n.get_text("\n", strip=True)
             if text:
                 candidates.append(text)
 
@@ -106,4 +106,11 @@ def is_rejected_tree(tag, policies: HtmlPolicies) -> bool:
 
 
 def has_hs(tag) -> bool:
-    return tag.find(["h1", "h2", "h3"], recursive=False) is not None
+    if tag.find(["h1", "h2", "h3"], recursive=False) is not None:
+        return True
+    for child in tag.find_all(recursive=False):
+        if child.name in {"div", "header"} and child.find(
+            ["h1", "h2", "h3"], recursive=False
+        ):
+            return True
+    return False

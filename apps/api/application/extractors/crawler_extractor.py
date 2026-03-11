@@ -1,21 +1,22 @@
+from collections import deque
 from typing import Iterable
 from urllib.parse import urljoin, urlsplit
 
 import httpx
 from bs4 import BeautifulSoup
 
-from domain import (
-    ExtractedContent,
-    ExtractionStrategy,
-    FileSection,
-    HtmlPolicies,
-    LinkItem,
-)
+from domain import CrawlerPolicies, ExtractedContent, ExtractionStrategy, HtmlPolicies
 from .contracts import CouldNotExtract
+from .html_common import (
+    collect_candidates,
+    extract_title,
+    extract_useful_links,
+)
 
 
 class CrawlerExtractor:
     _POLICIES = HtmlPolicies.default()
+    _CRAWLER_POLICIES = CrawlerPolicies.default()
 
     def extract(self, url: str) -> ExtractedContent:
         if not url:
@@ -25,16 +26,23 @@ class CrawlerExtractor:
         if not base.scheme or not base.netloc:
             raise CouldNotExtract("invalid url")
 
-        pages = self._crawl(url, max_pages=8)
+        pages = self._crawl(url, max_pages=self._CRAWLER_POLICIES.max_pages)
         if not pages:
             raise CouldNotExtract("crawler found no pages")
 
         home = pages[0]
         title = home["title"] or url
 
-        summary = None
+        sections = extract_useful_links(
+            home["soup"], url, max_items=12, policies=self._POLICIES
+        )
+
+        all_candidates: list[str] = []
+        for page in pages:
+            all_candidates.extend(collect_candidates(page["soup"], self._POLICIES))
+        sorted_candidates = sorted(all_candidates, key=len, reverse=True)
+        summary = self._POLICIES.select_summary(sorted_candidates)
         info = None
-        sections = self._extract_useful_links(home["soup"], url, max_items=12)
 
         return ExtractedContent(
             source_url=url,
@@ -47,11 +55,11 @@ class CrawlerExtractor:
 
     def _crawl(self, url: str, max_pages: int) -> list[dict[str, object]]:
         visited: set[str] = set()
-        queue: list[str] = [url]
+        queue: deque[str] = deque([url])
         results: list[dict[str, object]] = []
 
         while queue and len(results) < max_pages:
-            current = queue.pop(0)
+            current = queue.popleft()
             if current in visited:
                 continue
             visited.add(current)
@@ -61,7 +69,7 @@ class CrawlerExtractor:
                 continue
 
             soup = BeautifulSoup(response.text, "html.parser")
-            title = self._extract_title(soup)
+            title = extract_title(soup)
             results.append(
                 {
                     "url": current,
@@ -85,54 +93,12 @@ class CrawlerExtractor:
             return None
         return response
 
-    def _extract_title(self, soup: BeautifulSoup) -> str | None:
-        if soup.title and soup.title.string:
-            raw_title = soup.title.string.strip()
-            if raw_title:
-                return raw_title
-        h1 = soup.find("h1")
-        if h1 and h1.get_text(strip=True):
-            return h1.get_text(strip=True)
-        return None
-
-    def _extract_useful_links(
-        self, soup: BeautifulSoup, base_url: str, max_items: int
-    ) -> list[FileSection]:
-        base = urlsplit(base_url)
-        if not base.scheme or not base.netloc:
-            return []
-
-        raw_items: list[tuple[str, str]] = []
-        seen: set[str] = set()
-
-        for a in soup.find_all("a", href=True):
-            href_val = a.get("href")
-            href = href_val if isinstance(href_val, str) else ""
-            href = href.strip()
-            if not href or href.startswith(("#", "mailto:", "tel:", "javascript:")):
-                continue
-            absolute = urljoin(base_url, href)
-            if not self._POLICIES.is_useful_link(absolute, base.netloc):
-                continue
-            text = a.get_text(" ", strip=True)
-            if not text:
-                continue
-            if absolute in seen:
-                continue
-            seen.add(absolute)
-            raw_items.append((text, absolute))
-            if len(raw_items) >= max_items * 3:
-                break
-
-        if not raw_items:
-            return []
-
-        ranked = self._POLICIES.select_useful_links(raw_items, max_items)
-        items = [LinkItem(name=name, url=link) for name, link in ranked]
-        return [FileSection(title="Useful Links", items=items)]
 
     def _extract_internal_links(self, base_url: str, soup: BeautifulSoup) -> Iterable[str]:
         base = urlsplit(base_url)
+        policies = self._POLICIES
+        ranked: dict[str, tuple[int, int]] = {}
+
         for a in soup.find_all("a", href=True):
             href = a.get("href")
             if not isinstance(href, str):
@@ -144,4 +110,20 @@ class CrawlerExtractor:
             parts = urlsplit(absolute)
             if parts.netloc != base.netloc:
                 continue
-            yield absolute
+            if not policies.is_useful_link(absolute, base.netloc):
+                continue
+
+            text = a.get_text(" ", strip=True)
+            score = policies.link_rank(text, absolute)
+            text_len = len(text)
+            current = ranked.get(absolute)
+            if current is None or score > current[0] or (
+                score == current[0] and text_len > current[1]
+            ):
+                ranked[absolute] = (score, text_len)
+
+        ordered = sorted(
+            ranked.items(), key=lambda item: (item[1][0], item[1][1]), reverse=True
+        )
+        for url, _meta in ordered:
+            yield url

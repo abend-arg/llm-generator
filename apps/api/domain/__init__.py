@@ -1,5 +1,5 @@
 from .html_policies import HtmlPolicies
-from .extractor_policies import EXTRACTOR_ORDER
+from .extractor_policies import CrawlerPolicies, EXTRACTOR_ORDER
 from .models import ExtractedContent, ExtractionStrategy, FileSection, LinkItem
 
 __all__ = [
@@ -9,4 +9,5 @@ __all__ = [
     "ExtractionStrategy",
     "HtmlPolicies",
     "EXTRACTOR_ORDER",
+    "CrawlerPolicies",
 ]
