@@ -1,6 +1,6 @@
 from urllib.parse import urljoin, urlsplit
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Comment
 
 from domain import FileSection, HtmlPolicies, LinkItem
 
@@ -76,7 +76,7 @@ def collect_candidates(soup: BeautifulSoup, policies: HtmlPolicies) -> list[str]
             for n in nodes
             if not is_rejected_tree(n, policies)
         ).strip()
-        if text:
+        if text and not policies.is_rejected_text(text):
             candidates.append(text)
 
     if not candidates:
@@ -84,7 +84,7 @@ def collect_candidates(soup: BeautifulSoup, policies: HtmlPolicies) -> list[str]
             if is_rejected_tree(n, policies):
                 continue
             text = _text_without_headings(n)
-            if text:
+            if text and not policies.is_rejected_text(text):
                 candidates.append(text)
 
     return candidates
@@ -93,10 +93,19 @@ def collect_candidates(soup: BeautifulSoup, policies: HtmlPolicies) -> list[str]
 def _text_without_headings(tag) -> str:
     parts: list[str] = []
     for node in tag.find_all(string=True):
+        if node.find_parent(["script", "style", "noscript"]) is not None:
+            continue
         if node.find_parent(["h1", "h2", "h3"]) is not None:
             continue
+        if isinstance(node, Comment):
+            continue
+        parent = node.parent
+        if parent:
+            classes = parent.get("class") or []
+            if any("img" in cls or "image" in cls or "icon" in cls for cls in classes):
+                continue
         text = node.strip()
-        if text:
+        if text and len(text) >= 10:
             parts.append(text)
     return "\n".join(parts)
 
@@ -119,9 +128,16 @@ def is_rejected_tree(tag, policies: HtmlPolicies) -> bool:
 def has_hs(tag) -> bool:
     if tag.find(["h1", "h2", "h3"], recursive=False) is not None:
         return True
-    for child in tag.find_all(recursive=False):
-        if child.name in {"div", "header"} and child.find(
-            ["h1", "h2", "h3"], recursive=False
-        ):
+    return _has_heading_within_depth(tag, max_depth=3)
+
+
+def _has_heading_within_depth(tag, max_depth: int) -> bool:
+    for heading in tag.find_all(["h1", "h2", "h3"]):
+        depth = 0
+        current = heading.parent
+        while current is not None and current is not tag and depth < max_depth:
+            current = current.parent
+            depth += 1
+        if current is tag:
             return True
     return False

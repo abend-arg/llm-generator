@@ -23,6 +23,9 @@ class ExportContentService:
             try:
                 data = extractor.extract(url)
             except CouldNotExtract:
+                self._LOGGER.info(
+                    "extractor_fallback extractor=%s", extractor.__class__.__name__
+                )
                 continue
             self._LOGGER.info(
                 "extractor_selected strategy=%s", data.extraction_strategy.value

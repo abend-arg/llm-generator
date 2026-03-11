@@ -17,6 +17,10 @@ from .html_common import (
 class CrawlerExtractor:
     _POLICIES = HtmlPolicies.default()
     _CRAWLER_POLICIES = CrawlerPolicies.default()
+    _USER_AGENT = (
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/122.0 Safari/537.36"
+    )
 
     def extract(self, url: str) -> ExtractedContent:
         if not url:
@@ -86,7 +90,12 @@ class CrawlerExtractor:
 
     def _fetch(self, url: str) -> httpx.Response | None:
         try:
-            response = httpx.get(url, timeout=5.0, follow_redirects=True)
+            response = httpx.get(
+                url,
+                timeout=5.0,
+                follow_redirects=True,
+                headers={"User-Agent": self._USER_AGENT},
+            )
         except httpx.RequestError:
             return None
         if response.status_code != 200:

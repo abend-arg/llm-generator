@@ -30,6 +30,15 @@ class HtmlPolicies:
                 "social-proof",
                 "case-study",
                 "customer",
+                "book a demo",
+                "schedule a demo",
+                "request a demo",
+                "get a demo",
+                "contact us",
+                "get started",
+                "talk to sales",
+                "we'd love to chat",
+                "click below",
             },
             reject_link_keywords={
                 "/privacy",
@@ -103,12 +112,25 @@ class HtmlPolicies:
                 "testimonials",
                 "review",
                 "reviews",
+                "book a demo",
+                "schedule a demo",
+                "request a demo",
+                "get a demo",
+                "contact us",
+                "get started",
+                "talk to sales",
+                "we'd love to chat",
+                "click below",
             },
         )
 
     def is_rejected_node(self, classes: list[str], node_id: str) -> bool:
         haystack = " ".join(classes + [node_id]).lower()
         return any(word in haystack for word in self.reject_keywords)
+
+    def is_rejected_text(self, text: str) -> bool:
+        haystack = text.lower()
+        return any(word in haystack for word in self.info_reject_keywords)
 
     def is_useful_link(self, absolute_url: str, base_netloc: str) -> bool:
         parts = urlsplit(absolute_url)
@@ -170,13 +192,21 @@ class HtmlPolicies:
 
         ranked = sorted(filtered, key=self._info_score, reverse=True)
         selected: list[str] = []
+        selected_norm: list[str] = []
         total_len = 0
         for candidate in ranked:
+            candidate_norm = " ".join(candidate.lower().split())
+            if any(
+                candidate_norm in existing or existing in candidate_norm
+                for existing in selected_norm
+            ):
+                continue
             separator_len = 2 if selected else 0
             candidate_len = len(candidate) + separator_len
             if total_len + candidate_len > self.max_info_total_len:
                 continue
             selected.append(candidate)
+            selected_norm.append(candidate_norm)
             total_len += candidate_len
             if len(selected) >= self.max_info_items:
                 break
@@ -197,6 +227,6 @@ class HtmlPolicies:
     ) -> bool:
         if not summary or len(summary) < self.min_summary_len:
             return False
-        if not info or len(info) < self.min_info_len:
-            return False
-        return links_count >= self.min_links
+        has_info = info is not None and len(info) >= self.min_info_len
+        has_links = links_count >= self.min_links
+        return has_info or has_links
