@@ -40,6 +40,12 @@ This starts:
 - API (`apps/api`) with local CORS
 - Web (`apps/web`) in dev mode
 
+Clean all generated artifacts:
+
+```bash
+make clean
+```
+
 ## Test URLs
 
 Sample URLs to validate each extraction strategy and compare results:

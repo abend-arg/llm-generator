@@ -46,6 +46,12 @@ Then open the app at:
 http://localhost:3000
 ```
 
+Clean generated artifacts:
+
+```bash
+make clean
+```
+
 ## Notes
 
 - The API should be running (see `apps/api/README.md`).

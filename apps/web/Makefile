@@ -1,4 +1,4 @@
-.PHONY: install dev build start lint test all
+.PHONY: install dev build start lint test all clean
 
 install:
 	@echo "Installing web dependencies..."
@@ -25,3 +25,7 @@ test:
 	npm run test
 
 all: lint build
+
+clean:
+	@echo "Cleaning web artifacts..."
+	rm -rf node_modules .next out coverage .turbo .eslintcache

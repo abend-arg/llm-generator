@@ -109,6 +109,7 @@ make type           # mypy
 make test           # pytest
 make run            # starts the API with uvicorn
 make run-local      # starts the API with CORS for local web
+make clean          # removes caches and test artifacts
 ```
 
 ## Postman

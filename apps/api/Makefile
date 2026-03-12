@@ -1,4 +1,4 @@
-.PHONY: format type test all run run-local
+.PHONY: format type test all run run-local clean
 
 all: format type test
 
@@ -22,3 +22,8 @@ type:
 test:
 	@echo "Running pytest..."
 	uv run pytest
+
+clean:
+	@echo "Cleaning API artifacts..."
+	rm -rf .mypy_cache .pytest_cache .ruff_cache .coverage htmlcov
+	find . -type d -name "__pycache__" -prune -exec rm -rf {} +
