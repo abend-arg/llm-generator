@@ -62,6 +62,24 @@ npm run build
 
 The static files will be generated in the `out/` directory. 
 
+## Deployment Notes
+
+For a static hosting setup (e.g., DigitalOcean App Platform):
+
+1. Build the static bundle:
+
+```bash
+npm run build
+```
+
+2. Set the backend URL:
+
+```
+NEXT_PUBLIC_BE_API_URL=https://your-api-domain.com
+```
+
+3. Deploy the `out/` directory as a static site.
+
 ## Future Work
 
 - UI polish (layout/spacing, visual hierarchy, states).

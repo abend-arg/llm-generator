@@ -11,14 +11,22 @@ Hexagonal layers:
 - `application` (services, extractors, renderers)
 - `domain` (models and policies)
 
+## Domain Policies
+
+Domain contains configuration and policies that shape extractor behavior:
+- HTML thresholds, filters, and ranking live in `domain/html_policies.py`.
+- Crawler limits and penalties live in `domain/extractor_policies.py`.
+
 ## Parsing Strategy
 
 - The pipeline tries extractors in order and stops on the first successful one.
 - Each extractor decides when it “cannot extract” and raises `CouldNotExtract` to allow fallback.
+- The renderer converts extracted content into an output format (currently `llms.txt`, but extensible).
 
 Current order:
 - `LlmsTxtExtractor` (prefers existing `/.well-known/llms.txt` or `/llms.txt`)
 - `SinglePageExtractor` (single-page HTML fallback)
+- `CrawlerExtractor` (multi-page crawl fallback)
 - `DefaultTitleExtractor` (last resort)
 
 ### Flexible llms.txt parsing
@@ -31,9 +39,15 @@ The `llms.txt` parsing is intentionally tolerant to non‑standard files:
 
 ### HTML extraction notes
 
-- Summary is selected from containers with headings, with reject keywords to avoid testimonials.
+- Summary is selected from the first few heading-associated paragraphs.
+- Info is selected from all remaining paragraphs (dedup + filters).
 - Useful links are derived from internal anchors and filtered (privacy/login/etc.).
 - Policies (thresholds and filters) live in `domain/html_policies.py`.
+
+### Crawler notes
+
+- The crawler follows ranked internal links and limits pages/paragraphs per page.
+- Ranking penalties (e.g., support/faq) and crawl limits live in `domain/extractor_policies.py`.
 
 ## Requirements
 
@@ -51,6 +65,20 @@ make run-local
 ```
 
 OpenAPI docs are available at `/docs` once the API is running.
+
+## Deployment Notes
+
+Recommended production command:
+
+```bash
+uvicorn main:app --host 0.0.0.0 --port 8000
+```
+
+If `uv` is installed, you can also run:
+
+```bash
+make run
+```
 
 ## Local Environment Setup
 
@@ -126,3 +154,6 @@ uv sync --group dev
 - Structured logging and metrics for production visibility.
 - Extractor for JS-heavy pages (SPAs) using a headless browser (e.g., Playwright) as fallback.
 - Alternative pipeline: extract human-readable text and use an LLM integration to draft `llms.txt`.
+- Make FastAPI endpoints and extractors async (e.g., `httpx.AsyncClient`) and parallelize crawl fetches.
+- Avoid double-fetching between the HTML and crawler extractors.
+- Consider alternate HTML parsing engines (e.g., lxml) for performance, noting OS-level dependency tradeoffs.

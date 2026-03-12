@@ -18,7 +18,7 @@ The system takes a URL, attempts to fetch an existing `llms.txt`, and if not ava
 - Python 3.12+
 - Node.js 18+ (recommended)
 - `uv` for the backend
-- npm/pnpm/yarn/bun for the frontend
+- npm for the frontend
 
 ## Run Local
 
@@ -31,6 +31,26 @@ make run-local
 This starts:
 - API (`apps/api`) with local CORS
 - Web (`apps/web`) in dev mode
+
+## Test URLs
+
+Sample URLs to validate each extraction strategy and compare results:
+
+LLMS (existing `llms.txt` files):
+- https://listdefender.com
+- https://tagit.video
+- https://mailchimp.com
+- https://www.tryprofound.com/
+
+HTML (single-page extraction should be sufficient):
+- https://buenbit.com/
+- https://www.ryomacorp.com/
+- https://www.canals.ai/
+- https://www.luxerone.com/
+
+CRAWLER (multi-page crawl for richer context):
+- https://www.monks.com/
+- https://www.hostinger.com
 
 ## More Info
 
