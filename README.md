@@ -6,6 +6,14 @@ Project to generate `llms.txt` files from a URL, with a backend API and a web fr
 
 The system takes a URL, attempts to fetch an existing `llms.txt`, and if not available, extracts content from HTML to build a `llms.txt` with useful sections. It is designed to be extensible with multiple extractors and renderers.
 
+Live demo (DigitalOcean):
+
+https://llms-generator-pionk.ondigitalocean.app/
+
+Demo video:
+
+https://www.youtube.com/watch?v=CgnNkdsxCHg
+
 ## Tech Stack
 
 - Backend: FastAPI (Python 3.12+)
