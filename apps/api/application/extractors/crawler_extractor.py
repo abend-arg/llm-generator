@@ -41,14 +41,19 @@ class CrawlerExtractor:
             home["soup"], url, max_items=12, policies=self._POLICIES
         )
 
-        all_candidates: list[str] = []
+        paragraphs = []
         for page in pages:
-            all_candidates.extend(
-                [p.text for p in collect_candidates(page["soup"], self._POLICIES)]
+            candidates = collect_candidates(page["soup"], self._POLICIES)
+            paragraphs.extend(
+                candidates[: self._CRAWLER_POLICIES.max_paragraphs_per_page]
             )
-        sorted_candidates = sorted(all_candidates, key=len, reverse=True)
-        summary = self._POLICIES.select_summary(sorted_candidates)
-        info = None
+
+        summary_candidates = [p.text for p in paragraphs if p.has_heading][:6]
+        summary = self._POLICIES.select_summary(summary_candidates)
+        info_candidates = [p.text for p in paragraphs if p.has_heading] + [
+            p.text for p in paragraphs if not p.has_heading
+        ]
+        info = self._POLICIES.select_info(info_candidates, summary)
 
         return ExtractedContent(
             source_url=url,
@@ -126,6 +131,10 @@ class CrawlerExtractor:
 
             text = a.get_text(" ", strip=True)
             score = policies.link_rank(text, absolute)
+            lowered = f"{text} {absolute}".lower()
+            for keyword, penalty in self._CRAWLER_POLICIES.link_penalty_keywords.items():
+                if keyword in lowered:
+                    score += penalty
             text_len = len(text)
             current = ranked.get(absolute)
             if current is None or score > current[0] or (

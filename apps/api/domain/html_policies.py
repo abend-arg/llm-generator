@@ -39,6 +39,8 @@ class HtmlPolicies:
                 "talk to sales",
                 "we'd love to chat",
                 "click below",
+                "blog",
+                "carousel",
             },
             reject_link_keywords={
                 "/privacy",
@@ -49,6 +51,11 @@ class HtmlPolicies:
                 "/sign-in",
                 "/signin",
                 "/register",
+                "/article",
+                "/articles",
+                "/statement",
+                "statement",
+                "case-studies",
             },
             min_summary_len=100,
             max_summary_len=500,
@@ -77,6 +84,8 @@ class HtmlPolicies:
                 "privacy": -3,
                 "legal": -3,
                 "terms": -2,
+                "career": -3,
+                "partner": -2,
             },
             info_rank_keywords={
                 "about": 5,
@@ -84,9 +93,7 @@ class HtmlPolicies:
                 "documentation": 6,
                 "docs": 5,
                 "api": 4,
-                "faq": 5,
                 "help": 4,
-                "support": 4,
                 "pricing": 4,
                 "product": 3,
                 "features": 3,
@@ -101,6 +108,8 @@ class HtmlPolicies:
                 "testimonials": -3,
                 "review": -3,
                 "reviews": -3,
+                "faq": -3,
+                "support": -3,
             },
             info_reject_keywords={
                 "cookie",
@@ -121,6 +130,8 @@ class HtmlPolicies:
                 "talk to sales",
                 "we'd love to chat",
                 "click below",
+                "faq",
+                "support",
             },
         )
 

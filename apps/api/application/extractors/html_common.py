@@ -1,12 +1,9 @@
-import logging
 from dataclasses import dataclass
 from urllib.parse import urljoin, urlsplit
 
-from bs4 import BeautifulSoup, Comment, Declaration, ProcessingInstruction
+from bs4 import BeautifulSoup, Comment, Declaration, ProcessingInstruction, NavigableString
 
 from domain import FileSection, HtmlPolicies, LinkItem
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, slots=True)
@@ -29,15 +26,12 @@ def extract_summary_and_info(
     soup: BeautifulSoup, policies: HtmlPolicies
 ) -> tuple[str | None, str | None]:
     paragraphs = collect_candidates(soup, policies)
-    for paragraph in sorted(paragraphs, key=lambda p:len(p.text), reverse=True):
-        _LOGGER.info("candidate_len=%s has_title=%s candidate=%s", len(paragraph.text), "Yes" if paragraph.has_heading else "No", paragraph.text)
     summary_candidates = [p.text for p in paragraphs if p.has_heading][:3]
     summary = policies.select_summary(summary_candidates)
     info_candidates = [p.text for p in paragraphs if p.has_heading] + [
         p.text for p in paragraphs if not p.has_heading
     ]
     info = policies.select_info(info_candidates, summary)
-    _LOGGER.info("SUMMARYL: %s /n/n/n/n/nINFO: %s", summary, info)
     return summary, info
 
 
@@ -81,20 +75,20 @@ def extract_useful_links(
 def collect_candidates(soup: BeautifulSoup, policies: HtmlPolicies) -> list[TextParagraph]:
     candidates: list[TextParagraph] = []
     seen: set[str] = set()
-    containers = soup.find_all(["main", "article", "section", "div"])
+    containers = soup.find_all(["main", "article", "section", "div", "header"])
     for tag in containers:
         if is_rejected_tree(tag, policies):
             continue
-        has_heading = has_hs(tag) or has_rich_text(tag)
+        has_heading = has_hs(tag) or has_rich_text(tag) or has_heading_in_siblings(tag)
         nodes = tag.find_all(["p", "ul", "span", "div"], recursive=False)
         if not nodes:
             continue
-        text = "\n".join(
-            _text_without_headings(n)
-            for n in nodes
-            if not is_rejected_tree(n, policies)
-        ).strip()
-        if text and not policies.is_rejected_text(text):
+        for node in nodes:
+            if is_rejected_tree(node, policies):
+                continue
+            text = _text_without_headings(node).strip()
+            if not text or policies.is_rejected_text(text):
+                continue
             normalized = " ".join(text.lower().split())
             if normalized in seen:
                 continue
@@ -109,6 +103,14 @@ def _text_without_headings(tag) -> str:
     for node in tag.find_all(string=True):
         if node.find_parent(["script", "style", "noscript"]) is not None:
             continue
+        if node.find_parent(["select", "option", "button", "label", "input"]) is not None:
+            continue
+        if node.find_parent(attrs={"role": "option"}) is not None:
+            continue
+        if node.find_parent(attrs={"role": "listbox"}) is not None:
+            continue
+        if node.find_parent("a") is not None:
+            continue
         if node.find_parent(["h1", "h2", "h3"]) is not None:
             continue
         if isinstance(node, (Comment, Declaration, ProcessingInstruction)):
@@ -117,6 +119,11 @@ def _text_without_headings(tag) -> str:
         if parent:
             classes = parent.get("class") or []
             if any("img" in cls or "image" in cls or "icon" in cls for cls in classes):
+                continue
+            if any(
+                "select" in cls or "dropdown" in cls or "menu" in cls
+                for cls in classes
+            ):
                 continue
         text = node.strip()
         if text and len(text) >= 25:
@@ -142,13 +149,33 @@ def is_rejected_tree(tag, policies: HtmlPolicies) -> bool:
 def has_hs(tag) -> bool:
     if tag.find(["h1", "h2", "h3"], recursive=False) is not None:
         return True
-    return _has_heading_within_depth(tag, max_depth=3)
+    return _has_heading_within_depth(tag, max_depth=6)
 
 
 def has_rich_text(tag) -> bool:
     if tag.find(attrs={"data-testid": "richTextElement"}) is not None:
         return True
     return tag.find(class_=lambda cls: isinstance(cls, str) and "rich-text" in cls) is not None
+
+
+def has_heading_in_siblings(tag) -> bool:
+    parent = tag.parent
+    if parent is None:
+        return False
+    for child in parent.children:
+        if child is tag:
+            return False
+        if _child_has_heading(child):
+            return True
+    return False
+
+
+def _child_has_heading(child) -> bool:
+    if isinstance(child, NavigableString):
+        return False
+    if getattr(child, "name", None) in {"h1", "h2", "h3"}:
+        return True
+    return child.find(["h1", "h2", "h3"]) is not None
 
 
 def _has_heading_within_depth(tag, max_depth: int) -> bool:
